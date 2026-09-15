@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hành Trình AI An Toàn</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #e0f7fa; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        #game-container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
+            max-width: 500px; 
+            width: 90%; 
+            text-align: center; 
+        }
+        h1 { color: #006064; font-size: 26px; }
+        h2 { color: #00838f; }
+        .btn { 
+            background-color: #00acc1; 
+            color: white; 
+            border: none; 
+            padding: 14px 20px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600;
+            transition: 0.3s; 
+            width: 100%; 
+            display: block;
+        }
+        .btn:hover { background-color: #00838f; }
+        .btn:disabled { background-color: #b2ebf2; cursor: not-allowed; }
+        .hidden { display: none !important; }
+        #feedback { 
+            margin-top: 20px; 
+            font-size: 15px;
+            font-weight: bold; 
+            padding: 15px; 
+            border-radius: 8px; 
+            text-align: left;
+            line-height: 1.5;
+        }
+        .correct { background-color: #d4edda; color: #155724; border-left: 5px solid #28a745; }
+        .incorrect { background-color: #f8d7da; color: #721c24; border-left: 5px solid #dc3545; }
+        #question-text { 
+            font-size: 18px; 
+            margin-bottom: 25px; 
+            color: #34495e; 
+            text-align: left;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Màn hình bắt đầu -->
+        <div id="start-screen">
+            <h1>Hành Trình AI An Toàn</h1>
+            <p style="color: #546e7a; margin-bottom: 25px;">Kiểm tra kỹ năng sử dụng trí tuệ nhân tạo một cách thông minh, đạo đức và bảo mật.</p>
+            <button class="btn" onclick="startGame()">Bắt Đầu Chơi</button>
+        </div>
+
+        <!-- Màn hình câu hỏi -->
+        <div id="quiz-screen" class="hidden">
+            <h2 id="level-title">Tình huống</h2>
+            <p id="question-text"></p>
+            <div id="options-container"></div>
+            <div id="feedback" class="hidden"></div>
+            <button id="next-btn" class="btn hidden" onclick="nextQuestion()" style="background-color: #ff9800; margin-top: 20px;">Tiếp theo ➔</button>
+        </div>
+
+        <!-- Màn hình kết quả -->
+        <div id="end-screen" class="hidden">
+            <h1>Hoàn Thành Khóa Huấn Luyện!</h1>
+            <h2 id="final-score" style="font-size: 30px; color: #ff9800;"></h2>
+            <p style="color: #546e7a; margin-bottom: 25px;">Hãy lan tỏa kiến thức này để xây dựng một cộng đồng sử dụng AI an toàn nhé.</p>
+            <button class="btn" onclick="location.reload()">Chơi Lại Từ Đầu</button>
+        </div>
+    </div>
+
+    <script>
+        // Dữ liệu các tình huống trong game
+        const questions = [
+            {
+                question: "Một công cụ chatbot AI yêu cầu bạn cung cấp 'Căn cước công dân và Số thẻ ngân hàng' để kích hoạt tính năng cao cấp miễn phí. Bạn sẽ làm gì?",
+                options: [
+                    { text: "Cung cấp thông tin vì AI của các nền tảng lớn luôn được bảo mật tuyệt đối.", isCorrect: false },
+                    { text: "Từ chối và đóng trang web. Tuyệt đối không chia sẻ dữ liệu nhạy cảm cho bất kỳ AI nào.", isCorrect: true }
+                ],
+                explanation: "Dữ liệu bạn nhập vào có thể được AI sử dụng để huấn luyện mô hình hoặc bị rò rỉ. Tuyệt đối giữ kín thông tin định danh và tài chính."
+            },
+            {
+                question: "Bạn đang hướng dẫn học sinh làm một bài luận. Cách sử dụng AI nào sau đây phát huy tốt nhất vai trò của một trợ thủ học tập?",
+                options: [
+                    { text: "Yêu cầu AI viết hoàn chỉnh toàn bộ bài luận để học sinh chép lại cho nhanh.", isCorrect: false },
+                    { text: "Dùng AI để tạo dàn ý, gợi ý tài liệu tham khảo và giải thích các khái niệm khó hiểu.", isCorrect: true }
+                ],
+                explanation: "AI nên được dùng để mở rộng tư duy và hỗ trợ quá trình học, không phải để làm thay. Việc lạm dụng sẽ làm giảm khả năng tư duy độc lập."
+            },
+            {
+                question: "Bạn thấy một video clip người nổi tiếng phát ngôn gây sốc đang lan truyền mạnh. Tuy nhiên, khẩu hình miệng có vẻ hơi gượng gạo. Bạn nên phản ứng thế nào?",
+                options: [
+                    { text: "Bình tĩnh kiểm tra chéo thông tin trên các trang tin tức chính thống. Đây có thể là Deepfake.", isCorrect: true },
+                    { text: "Chia sẻ ngay lập tức về trang cá nhân để mọi người cùng vào bình luận.", isCorrect: false }
+                ],
+                explanation: "Deepfake có thể tạo ra video, âm thanh giả mạo rất chân thực. Kỹ năng quan trọng nhất hiện nay là 'Xác minh (Fact-check) trước khi tin tưởng'."
+            },
+            {
+                question: "Khi bạn đặt một câu hỏi về lịch sử và AI đưa ra câu trả lời chứa một vài mốc thời gian lạ, chưa từng nghe qua. Bạn nên làm gì?",
+                options: [
+                    { text: "Mặc định AI có cơ sở dữ liệu khổng lồ nên chắc chắn thông tin đó là đúng.", isCorrect: false },
+                    { text: "Nhận thức được hiện tượng AI 'ảo giác' (Hallucination) và đối chiếu lại với sách vở, tài liệu uy tín.", isCorrect: true }
+                ],
+                explanation: "AI có thể 'tự bịa' ra các thông tin nghe rất hợp lý (Hallucination). Luôn giữ tư duy phản biện và đối chiếu thông tin quan trọng."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestionIndex];
+            document.getElementById('level-title').innerText = "Tình huống " + (currentQuestionIndex + 1) + " / " + questions.length;
+            document.getElementById('question-text').innerText = q.question;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            // Xáo trộn vị trí 2 nút bấm để tránh người chơi nhớ vị trí
+            let shuffledOptions = q.options.sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => checkAnswer(opt.isCorrect, q.explanation, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function checkAnswer(isCorrect, explanation, selectedBtn) {
+            const feedback = document.getElementById('feedback');
+            feedback.classList.remove('hidden');
+            
+            const buttons = document.getElementById('options-container').getElementsByTagName('button');
+            for (let btn of buttons) {
+                btn.disabled = true; 
+            }
+
+            if (isCorrect) {
+                score += 25;
+                selectedBtn.style.backgroundColor = "#28a745";
+                feedback.innerHTML = "✅ <b>Chính xác!</b> <br><br>" + explanation;
+                feedback.className = "correct";
+            } else {
+                selectedBtn.style.backgroundColor = "#dc3545";
+                feedback.innerHTML = "❌ <b>Chưa chính xác.</b> <br><br>" + explanation;
+                feedback.className = "incorrect";
+            }
+
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score + " / 100 Điểm";
+        }
+    </script>
+</body>
+</html>
