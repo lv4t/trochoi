@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2d2b72"><title>Máy học nhìn đặc điểm · Trò chơi lớp 5</title>
+<style>
+:root{font-family:Arial,sans-serif;color:#20244d;background:#f5f4ff;font-size:18px}*{box-sizing:border-box}
+body{margin:0}button{font:inherit;cursor:pointer}.app{max-width:960px;margin:auto;padding:18px 18px 50px}
+header{background:#2d2b72;color:white;border-radius:28px;padding:25px 30px;position:relative;overflow:hidden}
+header:after{content:"✦";position:absolute;right:28px;top:2px;font-size:9rem;color:#f8c859;opacity:.22}
+header small{font-size:.82rem;font-weight:700;letter-spacing:.09em}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.08;margin:11px 0}header p{max-width:650px;line-height:1.45;margin:0}
+.stages{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 14px}.stage{padding:9px 14px;border-radius:99px;background:#e4e2ff;font-weight:700;font-size:.85rem}.stage.active{background:#f8c859}
+.status{display:flex;gap:12px;align-items:center;margin-bottom:18px;font-weight:700}.meter{flex:1;height:12px;border-radius:99px;background:#dfdef3;overflow:hidden}.meter i{display:block;height:100%;width:0;background:#ef775e;transition:width .3s}
+main{background:white;border:2px solid #dcdaf2;border-radius:25px;box-shadow:0 9px 0 #dcdaf2;padding:28px}
+.eyebrow{color:#5a48a6;font-size:.9rem;font-weight:700;margin:0 0 10px}h2{font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.24;margin:0 0 18px}
+.picture{min-height:145px;display:flex;align-items:center;justify-content:center;background:#f5f4ff;border-radius:19px;margin:15px 0 22px;font-size:5.2rem}
+.picture.multi{gap:20px;font-size:3.9rem}.picture .label{font-size:1rem;font-weight:700;background:#f8c859;border-radius:12px;padding:10px 14px;margin-left:14px;max-width:310px}
+.choices{display:grid;gap:12px}.choice{display:block;text-align:left;width:100%;min-height:65px;background:white;color:#20244d;border:2px solid #c9c4ee;border-radius:16px;padding:13px 18px;font-weight:700}
+.choice:hover,.choice:focus-visible{outline:none;background:#f2f0ff;border-color:#5a48a6}.choice.wrong{background:#ffe9e2;border-color:#ef775e}.choice.correct{background:#d9f4e7;border-color:#229664}.choice:disabled{cursor:default}
+.feedback{min-height:66px;padding:15px 17px;margin-top:18px;border-radius:14px;background:#fff4d8;line-height:1.4}.next,.again{background:#2d2b72;color:white;border:0;border-radius:14px;padding:14px 23px;min-height:55px;font-weight:700;margin-top:18px}.next:disabled{opacity:.4;cursor:default}
+.result{text-align:center}.result strong{font-size:4rem;color:#2d2b72;display:block;margin:12px}.result p{line-height:1.45}.teacher{margin:24px 4px;color:#555974;font-size:.85rem;line-height:1.5}
+@media(max-width:600px){.app{padding:10px 10px 35px}header,main{padding:20px}.picture{min-height:125px}.picture.multi{font-size:2.9rem;gap:9px}.picture .label{font-size:.82rem}}
+</style></head>
+<body><div class="app"><header><small>BÀI 6 · KHỐI 5</small><h1>Máy học nhìn đặc điểm</h1><p>Ba trò chơi chạm chọn: tìm dấu hiệu, dạy máy bằng ảnh mẫu và sửa lỗi cho robot. Hãy trao đổi với bạn cùng nhóm sau mỗi câu.</p></header>
+<div class="stages" id="stages"></div><div class="status"><div class="meter"><i id="fill"></i></div><span id="score">0/12 sao</span></div>
+<main id="game" aria-live="polite"></main>
+<details class="teacher"><summary>Gợi ý cho giáo viên</summary><p>Mỗi chặng khoảng 3–4 phút, chơi theo cặp hoặc nhóm ba. Đúng ngay lần đầu được một sao; chọn sai vẫn được thử lại. Sau khi chơi, hỏi: “Máy đã học từ những ảnh nào?”, “Đặc điểm nào giúp em quyết định?”, “Vì sao cần kiểm tra dự đoán của máy?”. Trò chơi không lưu tên hay điểm của học sinh.</p></details></div>
+<script>
+const stages=[
+ {name:'Tìm đặc điểm',tag:'Quan sát và phân loại',items:[
+  {picture:'🚗',q:'Đặc điểm nào giúp nhận ra ô tô đồ chơi?',a:['Có 4 bánh và không có cánh','Có cánh và bay trên trời','Có 2 bánh và tay lái'],correct:0,why:'Ô tô thường có 4 bánh và không có cánh.'},
+  {picture:'✈️',q:'Dấu hiệu nào giúp nhận ra máy bay?',a:['Có cánh','Có đúng 4 bánh','Có bàn đạp'],correct:0,why:'Cánh là đặc điểm quan trọng để nhận ra máy bay.'},
+  {picture:'🏍️',q:'Vật này phù hợp với nhóm nào?',a:['Máy bay','Ô tô','Xe máy'],correct:2,why:'Xe máy có 2 bánh và tay lái.'},
+  {picture:'🚙',q:'Chiếc xe này khác màu chiếc ô tô mẫu. Em dựa vào đâu để xếp nhóm?',a:['Chỉ dựa vào màu sơn','Dựa vào bánh xe và hình dáng','Đoán ngẫu nhiên'],correct:1,why:'Màu có thể khác; hình dáng và số bánh giúp phân loại.'}]},
+ {name:'Dạy máy học',tag:'Chọn ảnh mẫu phù hợp',items:[
+  {picture:'🚗 🚙 🚕',q:'Muốn máy nhận ra nhiều loại ô tô, nên đưa bộ ảnh nào?',a:['Một ảnh ô tô duy nhất','Nhiều ô tô với màu và góc nhìn khác nhau','Chỉ một ảnh máy bay'],correct:1,why:'Nhiều ảnh phù hợp giúp máy học các đặc điểm khác nhau của ô tô.'},
+  {picture:'✈️ 🛩️',q:'Khi dạy máy nhận ra máy bay, nên có ảnh mẫu nào?',a:['Nhiều máy bay khác nhau','Chỉ ô tô','Chỉ đồng hồ'],correct:0,why:'Ảnh mẫu cần đúng loại đồ vật mà ta muốn máy học.'},
+  {picture:'🖼️ 🤖',q:'Sau khi cho máy xem ảnh mẫu, bước nào giúp biết máy đã học tốt chưa?',a:['Không cần làm gì nữa','Kiểm tra bằng ảnh mới','Tắt máy ngay'],correct:1,why:'Cần thử bằng ảnh mới để xem dự đoán của máy.'},
+  {picture:'🚗 ❓',q:'Nếu máy chỉ xem một ảnh ô tô, điều gì có thể xảy ra?',a:['Luôn nhận đúng mọi ô tô','Có thể nhầm một ô tô khác','Biết tất cả đồ vật'],correct:1,why:'Một ảnh mẫu quá ít; máy có thể nhầm khi gặp hình khác.'}]},
+ {name:'Sửa lỗi robot',tag:'Kiểm tra dự đoán',items:[
+  {picture:'🚗',bot:'Robot đoán: máy bay',q:'Em chọn nhãn đúng cho hình này.',a:['Ô tô','Máy bay','Xe máy'],correct:0,why:'Robot đã đoán sai; đây là ô tô.'},
+  {picture:'✈️',bot:'Robot đoán: máy bay',q:'Em chọn nhãn đúng cho hình này.',a:['Xe máy','Máy bay','Ô tô'],correct:1,why:'Robot đoán đúng: đây là máy bay.'},
+  {picture:'🏍️',bot:'Robot đoán: ô tô',q:'Em chọn nhãn đúng cho hình này.',a:['Ô tô','Máy bay','Xe máy'],correct:2,why:'Robot đã nhầm xe máy với ô tô.'},
+  {picture:'🚙',bot:'Robot đoán: ô tô',q:'Em chọn nhãn đúng cho hình này.',a:['Máy bay','Ô tô','Xe máy'],correct:1,why:'Màu xe khác nhưng vẫn là ô tô; robot đoán đúng.'}]}
+];
+let stage=0,index=0,score=0,tried=false,answered=false,finished=false;
+const $=id=>document.getElementById(id);
+function render(){
+ $('stages').innerHTML=stages.map((s,i)=>`<span class="stage ${i===stage&&!finished?'active':''}">${i+1}. ${s.name}</span>`).join('');
+ $('score').textContent=`${score}/12 sao`;$('fill').style.width=`${finished?100:(stage*4+index)/12*100}%`;
+ if(finished){$('game').innerHTML=`<div class="result"><p class="eyebrow">HOÀN THÀNH 3 CHẶNG</p><h2>Em đã giúp robot học và sửa lỗi!</h2><strong>${score}/12</strong><p>Máy dùng đặc điểm đã học từ ảnh mẫu để dự đoán. Khi gặp hình mới, máy có thể sai; con người cần kiểm tra.</p><button class="again" id="again">Chơi lại</button></div>`;$('again').onclick=()=>{stage=0;index=0;score=0;tried=false;answered=false;finished=false;render()};return}
+ let q=stages[stage].items[index];$('game').innerHTML=`<p class="eyebrow">CHẶNG ${stage+1} · ${stages[stage].tag} · CÂU ${index+1}/4</p><h2>${q.q}</h2><div class="picture ${q.picture.length>3?'multi':''}" aria-label="Hình minh họa">${q.picture}${q.bot?`<span class="label">${q.bot}</span>`:''}</div><div class="choices">${q.a.map((v,i)=>`<button class="choice" data-i="${i}">${v}</button>`).join('')}</div><div class="feedback" id="feedback" role="status">Chạm vào đáp án em chọn.</div><button class="next" id="next" disabled>${index<3?'Câu tiếp theo':stage<2?'Sang chặng tiếp theo':'Xem kết quả'}</button>`;
+ document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>choose(Number(b.dataset.i)));
+ $('next').onclick=()=>{if(!answered)return;if(index<3)index++;else if(stage<2){stage++;index=0}else finished=true;tried=false;answered=false;render()};
+}
+function choose(i){if(answered)return;const q=stages[stage].items[index],bs=[...document.querySelectorAll('.choice')];if(i===q.correct){if(!tried)score++;answered=true;bs[i].classList.add('correct');bs.forEach(b=>b.disabled=true);$('feedback').textContent=`Đúng rồi! ${q.why}`;$('score').textContent=`${score}/12 sao`;$('next').disabled=false}else{tried=true;bs[i].classList.add('wrong');bs[i].disabled=true;$('feedback').textContent='Chưa đúng. Hãy nhìn lại đặc điểm và thử đáp án khác.'}}
+render();
+</script></body></html>
+
