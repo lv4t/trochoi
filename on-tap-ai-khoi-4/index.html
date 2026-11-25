@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Hành trình AI quanh em · Ôn tập khối 4</title>
+  <style>
+    :root{font-family:Arial,sans-serif;color:#14304a;background:#f4fbfa;font-size:18px}
+    *{box-sizing:border-box}body{margin:0}button{font:inherit;cursor:pointer}
+    .app{max-width:920px;margin:auto;padding:24px 18px 48px}
+    header{background:#087f8c;color:white;border-radius:24px;padding:26px 30px}
+    header small{font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+    h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.05;margin:12px 0 10px}
+    header p{line-height:1.45;margin:0;max-width:670px}
+    .bar{display:flex;align-items:center;gap:12px;margin:22px 0 14px}
+    .track{height:12px;border-radius:99px;background:#d4e9e9;flex:1;overflow:hidden}
+    .fill{height:100%;background:#ef745c;width:0;transition:width .3s}
+    .score{font-weight:700;white-space:nowrap}
+    .panel{background:#fff;border:2px solid #d4e9e9;border-radius:24px;padding:28px;box-shadow:0 8px 0 #d4e9e9}
+    .eyebrow{color:#087f8c;font-weight:700;font-size:.9rem;margin:0 0 10px}
+    h2{font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.25;margin:0 0 22px}
+    .choices{display:grid;gap:12px}
+    .choice{min-height:66px;text-align:left;padding:14px 20px;border:2px solid #bddcdd;border-radius:16px;background:#fff;color:#14304a;font-weight:700}
+    .choice:hover,.choice:focus-visible{border-color:#087f8c;background:#e6f5f3;outline:none}
+    .choice.correct{background:#d9f5e6;border-color:#1c9c67}.choice.wrong{background:#ffe3dc;border-color:#ef745c}
+    .choice:disabled{cursor:default}
+    .feedback{min-height:62px;margin-top:18px;padding:14px 18px;border-radius:14px;background:#fff2d9;line-height:1.4}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+    .primary,.secondary{min-height:54px;border:0;border-radius:14px;padding:12px 22px;font-weight:700}
+    .primary{background:#087f8c;color:white}.primary:disabled{opacity:.45;cursor:default}
+    .secondary{background:#e7f4f3;color:#0a5e69}
+    .steps{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+    .step{padding:8px 14px;border-radius:99px;background:#e7f4f3;color:#0a5e69;font-weight:700;font-size:.85rem}
+    .step.active{background:#f4be46;color:#14304a}
+    .result{text-align:center}.result strong{font-size:4rem;color:#087f8c;display:block;margin:20px 0}
+    .teacher{margin-top:24px;color:#53657a;font-size:.85rem;line-height:1.4}
+    @media(max-width:600px){.app{padding:12px 12px 32px}.panel{padding:20px}.choice{min-height:74px}}
+  </style>
+</head>
+<body><div class="app">
+  <header><small>Ôn tập 5 bài · Khối 4</small><h1>Hành trình AI quanh em</h1><p>Ba chặng chơi bằng cách chạm chọn. Sau mỗi câu, hãy nói với bạn cùng nhóm vì sao em chọn đáp án ấy.</p></header>
+  <div class="steps" id="steps"></div>
+  <div class="bar"><div class="track"><div class="fill" id="fill"></div></div><span class="score" id="score">0/12 sao</span></div>
+  <main class="panel" id="game" aria-live="polite"></main>
+  <details class="teacher"><summary>Gợi ý cho giáo viên</summary><p>Cho học sinh chơi theo cặp hoặc nhóm ba. Mỗi chặng khoảng 3 phút. Điểm ghi nhận câu đúng ngay lần đầu; khi chọn sai, học sinh được thử lại. Sau chặng 3, mời mỗi nhóm nêu một ý tưởng AI và một việc con người phải tự quyết định. Trò chơi hoạt động ngay trên trình duyệt, không thu thập tên hay kết quả học sinh.</p></details>
+</div><script>
+const stages=[
+ {name:'Thám tử AI',tag:'Bài 1 và 5',items:[
+  ['Máy ảnh có AI nhìn thấy dấu hiệu sâu bệnh trên lá. AI đang giúp ai?',['Bác nông dân','Người bán sách','Người lái tàu'],0,'AI hỗ trợ bác nông dân phát hiện sớm sâu bệnh.'],
+  ['Buổi sáng, trợ lý AI có thể giúp em việc nào?',['Đi học thay em','Nhắc chuẩn bị sách vở','Ăn sáng thay em'],1,'AI có thể nhắc em, còn em tự chuẩn bị và đi học.'],
+  ['Buổi tối, AI có thể hỗ trợ việc học bằng cách nào?',['Làm hết bài tập thay em','Giải thích từ khó','Ngủ thay em'],1,'AI giải thích và đặt câu hỏi; em vẫn tự học.'],
+  ['Thiết bị có AI thường nhận thông tin bằng cách nào?',['Nhìn ảnh hoặc nghe lời nói','Đoán mà không cần dữ liệu','Chỉ chờ con người làm xong'],0,'Thiết bị nhận thông tin, phân tích rồi đưa ra hỗ trợ.']]},
+ {name:'Chọn trợ thủ',tag:'Bài 2 và 3',items:[
+  ['Em muốn biết nghĩa một từ tiếng Nhật. Em chọn gì?',['Google Dịch','Google Ống kính','Robot hút bụi'],0,'Công cụ dịch giúp tìm nghĩa và cách đọc.'],
+  ['Em muốn tìm tên một loài cây qua ảnh. Em chọn gì?',['Đồng hồ báo thức','Google Ống kính','Máy tính bỏ túi'],1,'Công cụ nhận diện ảnh có thể gợi ý tên cây.'],
+  ['Robot mang món trong nhà hàng. Nhân viên nên làm gì?',['Bỏ đi vì robot làm hết','Chăm sóc khách và xử lý tình huống','Để robot tự quyết định mọi việc'],1,'Con người tiếp tục chăm sóc khách và kiểm tra công việc.'],
+  ['AI gợi ý đường đi. Ai quyết định tuyến đường cuối cùng?',['Người đi đường sau khi quan sát','AI quyết định mọi trường hợp','Không ai cần quyết định'],0,'Con người xem tình hình thực tế và lựa chọn.']]},
+ {name:'Ước mơ cùng AI',tag:'Bài 4 và tổng hợp',items:[
+  ['Robot hỗ trợ thợ mộc cắt gỗ. Lợi ích nào phù hợp?',['Công việc nhanh hơn và bớt vất vả','Không cần kiểm tra an toàn','Robot tự chọn mọi sản phẩm'],0,'AI có thể hỗ trợ tốc độ và sức lực; con người vẫn giám sát.'],
+  ['Em dùng AI nhận diện cây lạ. Bước tiếp theo nên là gì?',['Tin ngay mọi kết quả','Quan sát cây và đối chiếu kết quả','Chép nguyên câu trả lời'],1,'Kết quả AI là gợi ý cần kiểm tra.'],
+  ['Một bạn AI học tập tốt nên làm gì?',['Gợi ý và đặt câu hỏi cho em','Làm bài hộ em','Quyết định em phải học gì mãi mãi'],0,'Bạn AI hỗ trợ để em tự hiểu và tự làm.'],
+  ['Khi AI đưa ra gợi ý chưa hợp lý, em nên làm gì?',['Kiểm tra và hỏi thầy cô hoặc người lớn','Làm theo ngay','Giấu kết quả đi'],0,'Con người kiểm tra, hỏi thêm và quyết định.']]}
+];
+let stage=0,item=0,score=0,answered=false,tried=false,finished=false;
+const $=id=>document.getElementById(id), total=12;
+function render(){
+ $('steps').innerHTML=stages.map((s,i)=>`<span class="step ${i===stage&&!finished?'active':''}">${i+1}. ${s.name}</span>`).join('');
+ $('score').textContent=`${score}/${total} sao`;$('fill').style.width=`${((stage*4+item)/total)*100}%`;
+ if(finished){$('fill').style.width='100%';$('game').innerHTML=`<div class="result"><p class="eyebrow">Hoàn thành cả 3 chặng</p><h2>Em đã cùng AI khám phá và tự quyết định!</h2><strong>${score}/${total}</strong><p>Hãy kể cho lớp một việc AI giúp em và một việc em tự làm.</p><button class="primary" id="again">Chơi lại</button></div>`;$('again').onclick=()=>{stage=0;item=0;score=0;answered=false;tried=false;finished=false;render()};return}
+ const q=stages[stage].items[item];$('game').innerHTML=`<p class="eyebrow">Chặng ${stage+1}: ${stages[stage].name} · ${stages[stage].tag} · Câu ${item+1}/4</p><h2>${q[0]}</h2><div class="choices">${q[1].map((v,i)=>`<button class="choice" data-choice="${i}">${v}</button>`).join('')}</div><div class="feedback" id="feedback" role="status">Chạm vào đáp án em chọn.</div><div class="actions"><button class="primary" id="next" disabled>${item===3?(stage===2?'Xem kết quả':'Sang chặng tiếp theo'):'Câu tiếp theo'}</button></div>`;
+ document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>choose(Number(b.dataset.choice)));
+ $('next').onclick=()=>{if(!answered)return;if(item<3)item++;else if(stage<2){stage++;item=0}else finished=true;answered=false;tried=false;render()};
+}
+function choose(i){if(answered)return;const q=stages[stage].items[item],bs=[...document.querySelectorAll('.choice')];if(i===q[2]){answered=true;if(!tried)score++;bs[i].classList.add('correct');bs.forEach(b=>b.disabled=true);$('feedback').textContent=`Đúng rồi! ${q[3]}`;$('next').disabled=false;$('score').textContent=`${score}/${total} sao`}else{tried=true;bs[i].classList.add('wrong');bs[i].disabled=true;$('feedback').textContent='Chưa đúng. Em hãy thử một đáp án khác và giải thích với bạn.'}}
+render();
+</script></body></html>
+
